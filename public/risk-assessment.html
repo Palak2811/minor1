@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/><title>Risk Assessment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+<div class="container">
+  <div class="header"><div class="brand"><div class="logo"></div><h1>Risk Assessment</h1></div><a href="./minor_project.html">← Back</a></div>
+
+  <div class="card">
+    <h2>Quick form</h2>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div><label class="label">Age</label><input id="age" type="number" class="input"/></div>
+      <div><label class="label">Gestational week</label><input id="gw" type="number" class="input"/></div>
+    </div>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div><label class="label">Systolic BP</label><input id="rsbp" type="number" class="input"/></div>
+      <div><label class="label">Diastolic BP</label><input id="rdbp" type="number" class="input"/></div>
+    </div>
+    <label class="label">Fasting glucose</label><input id="rglu" type="number" class="input"/>
+    <button class="btn primary" style="margin-top:10px" onclick="score()">Compute provisional score</button>
+    <div id="out" class="notice" style="margin-top:12px"></div>
+  </div>
+
+  <footer>© 2025 Maternal Health Platform</footer>
+</div>
+<script>
+function score(){
+  let s=0;
+  const sbp=+rsbp.value||0, dbp=+rdbp.value||0, glu=+rglu.value||0, ageV=+age.value||0;
+  if(sbp>=140||dbp>=90) s+=0.3;
+  if(glu>=126) s+=0.2;
+  if(ageV<18||ageV>35) s+=0.2;
+  s=Math.min(1,s);
+  const label=s<0.3?"Low":s<0.6?"Moderate":"High";
+  out.textContent=`Provisional risk: ${label} (score ${s.toFixed(2)})`;
+}
+</script>
+</body>
+</html>

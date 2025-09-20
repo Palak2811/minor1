@@ -1,0 +1,106 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Doctor Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo"></div>
+        <h1>Doctor Portal</h1>
+      </div>
+      <a href="./minor_project.html">← Back to Home</a>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Sign in / Register</h2>
+        <p class="muted">Access assigned patients and latest questionnaires.</p>
+        <label class="label">Email</label>
+        <input id="d-email" type="email" class="input" placeholder="doctor@example.com"/>
+        <label class="label">Password</label>
+        <input id="d-pass" type="password" class="input" placeholder="••••••••"/>
+        <div class="toolbar" style="margin-top:12px">
+          <button class="btn primary" onclick="doctorLogin()">Login</button>
+          <button class="btn ghost" onclick="doctorRegister()">Register</button>
+        </div>
+        <div id="dMsg" class="notice" style="margin-top:12px; display:none"></div>
+      </div>
+
+      <div class="card">
+        <h2>Assign Patient</h2>
+        <p class="muted">Paste the patient’s user id once to link care.</p>
+        <label class="label">Patient User ID</label>
+        <input id="pid" type="text" class="input" placeholder="64f…"/>
+        <button class="btn primary" style="margin-top:10px" onclick="assign()">Assign</button>
+      </div>
+
+      <div class="card">
+        <h2>My Patients</h2>
+        <div class="toolbar">
+          <button class="btn ghost" onclick="loadPatients()">Refresh</button>
+        </div>
+        <ul id="patients" class="list" style="margin-top:8px"></ul>
+      </div>
+
+      <div class="card">
+        <h2>Latest Questionnaires</h2>
+        <div class="toolbar">
+          <button class="btn ghost" onclick="loadLatest()">Refresh</button>
+        </div>
+        <pre id="latest" style="background:#0b1020; color:#d1e7ff; padding:12px; border-radius:10px; overflow:auto; max-height:260px; border:1px solid #1f2937"></pre>
+      </div>
+    </div>
+
+    <footer>© 2025 Maternal Health Platform</footer>
+  </div>
+
+<script>
+const API="http://localhost:5000/api";
+let token = localStorage.getItem("d_token") || "";
+
+function showD(text,type=""){ const el=document.getElementById("dMsg"); el.textContent=text; el.className="notice "+type; el.style.display="block"; }
+
+async function doctorRegister(){
+  const email=document.getElementById("d-email").value;
+  const password=document.getElementById("d-pass").value;
+  const name=email.split("@")[0]||"Doctor";
+  const res=await fetch(API+"/auth/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name,email,password,role:"doctor"})});
+  const data=await res.json();
+  if(res.ok){ token=data.token; localStorage.setItem("d_token",token); showD("Registered successfully","success"); }
+  else showD(data.error||"Registration failed","danger");
+}
+async function doctorLogin(){
+  const email=document.getElementById("d-email").value;
+  const password=document.getElementById("d-pass").value;
+  const res=await fetch(API+"/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email,password,role:"doctor"})});
+  const data=await res.json();
+  if(res.ok){ token=data.token; localStorage.setItem("d_token",token); showD("Logged in","success"); }
+  else showD(data.error||"Login failed","danger");
+}
+async function assign(){
+  if(!token) return showD("Login first","danger");
+  const patientUserId=document.getElementById("pid").value;
+  const res=await fetch(API+"/doctor/assign",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({patientUserId})});
+  const data=await res.json();
+  if(res.ok) showD("Assigned","success"); else showD(data.error||"Assign failed","danger");
+}
+async function loadPatients(){
+  if(!token) return showD("Login first","danger");
+  const res=await fetch(API+"/doctor/patients",{headers:{"Authorization":"Bearer "+token}});
+  const data=await res.json();
+  document.getElementById("patients").innerHTML=(data.patients||[]).map(p=>`<li><strong>${p.user?.name||"Patient"}</strong> — ${p.user?.email||""}</li>`).join("");
+}
+async function loadLatest(){
+  if(!token) return showD("Login first","danger");
+  const res=await fetch(API+"/doctor/patients/latest",{headers:{"Authorization":"Bearer "+token}});
+  const data=await res.json();
+  document.getElementById("latest").textContent=JSON.stringify(data.latest,null,2);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/><title>Emergency Access</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+<div class="container">
+  <div class="header"><div class="brand"><div class="logo"></div><h1>Emergency Access</h1></div><a href="./minor_project.html">← Back</a></div>
+
+  <div class="card">
+    <h2>Nearby hospitals</h2>
+    <p class="muted">Static list placeholder; integrate maps later.</p>
+    <ul class="list" id="hlist"></ul>
+  </div>
+
+  <footer>© 2025 Maternal Health Platform</footer>
+</div>
+<script>
+const hospitals=[
+  { name:"City Women & Children Hospital", phone:"+91-22-4000-1111", address:"Sector 21A" },
+  { name:"Sunrise Maternity Center", phone:"+91-22-4000-2222", address:"Near Central Park" },
+  { name:"Greenleaf Multispeciality", phone:"+91-22-4000-3333", address:"Block C-4" }
+];
+document.getElementById("hlist").innerHTML=hospitals.map(h=>`<li><strong>${h.name}</strong> — ${h.phone} — ${h.address}</li>`).join("");
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Patient Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="stylesheet" href="./styles.css"/>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <div class="logo"></div>
+        <h1>Patient Portal</h1>
+      </div>
+      <a href="./minor_project.html">← Back to Home</a>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Sign in / Register</h2>
+        <p class="muted">Use email and a password to create an account or sign in.</p>
+
+        <label class="label">Email</label>
+        <input id="p-email" type="email" class="input" placeholder="name@example.com"/>
+
+        <label class="label">Password</label>
+        <input id="p-pass" type="password" class="input" placeholder="••••••••"/>
+
+        <div class="toolbar" style="margin-top:12px">
+          <button id="btnLogin" class="btn primary">Login</button>
+          <button id="btnRegister" class="btn ghost">Register</button>
+        </div>
+
+        <!-- Will show after auth -->
+        <div id="myIdBox" class="notice" style="display:none; margin-top:8px"></div>
+
+        <div id="authMsg" class="notice" style="margin-top:12px; display:none"></div>
+      </div>
+
+      <div class="card">
+        <h2>Basic Health Questionnaire <span class="badge">preview</span></h2>
+        <p class="muted">Submit today’s basics to get a provisional risk label.</p>
+
+        <label class="label">Nausea</label>
+        <select id="nausea" class="input">
+          <option>none</option><option>mild</option><option>moderate</option><option>severe</option>
+        </select>
+
+        <label class="label">Bleeding</label>
+        <select id="bleeding" class="input">
+          <option>no</option><option>spotting</option><option>heavy</option>
+        </select>
+
+        <label class="label">Fetal kicks (last 2 hrs)</label>
+        <input id="kicks" type="number" min="0" class="input"/>
+
+        <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px">
+          <div>
+            <label class="label">Systolic BP</label>
+            <input id="sbp" type="number" class="input"/>
+          </div>
+          <div>
+            <label class="label">Diastolic BP</label>
+            <input id="dbp" type="number" class="input"/>
+          </div>
+        </div>
+
+        <label class="label">Fasting Glucose (mg/dL)</label>
+        <input id="glucose" type="number" class="input"/>
+
+        <label class="label">Swelling feet</label>
+        <select id="swelling" class="input">
+          <option>no</option><option>yes</option>
+        </select>
+
+        <label class="label">Headache</label>
+        <select id="headache" class="input">
+          <option>no</option><option>mild</option><option>severe</option>
+        </select>
+
+        <button id="btnSubmitQ" class="btn primary block" style="margin-top:14px">Submit questionnaire</button>
+        <div id="result" class="notice" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <footer>© 2025 Maternal Health Platform</footer>
+  </div>
+
+<script>
+const API = "http://localhost:5000/api";
+let token = localStorage.getItem("p_token") || "";
+
+// helpers
+function showMsg(elId, text, type=""){
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.className = "notice "+type;
+  el.style.display = "block";
+}
+function showMyId(id){
+  const box = document.getElementById("myIdBox");
+  if(!box) return;
+  box.style.display = "block";
+  box.innerHTML = `My User ID: <code>${id}</code> 
+    <button class="btn ghost" style="padding:4px 8px" onclick="navigator.clipboard.writeText('${id}')">Copy</button>`;
+}
+
+// auth actions
+async function doRegister(){
+  try{
+    const email = document.getElementById("p-email").value.trim();
+    const password = document.getElementById("p-pass").value;
+    const name = email.split("@")[0] || "Patient";
+    if(!email || !password) return showMsg("authMsg","Email and password required","danger");
+    const res = await fetch(API+"/auth/register",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ name, email, password, role:"patient" })
+    });
+    const data = await res.json().catch(()=>({ error:"Invalid response" }));
+    if(!res.ok) return showMsg("authMsg", data.error || `Register failed (${res.status})`, "danger");
+    token = data.token; localStorage.setItem("p_token", token);
+    showMsg("authMsg","Registered successfully","success");
+    showMyId(data.user.id);
+  }catch(err){ console.error(err); showMsg("authMsg","Network error during register","danger"); }
+}
+
+async function doLogin(){
+  try{
+    const email = document.getElementById("p-email").value.trim();
+    const password = document.getElementById("p-pass").value;
+    if(!email || !password) return showMsg("authMsg","Email and password required","danger");
+    const res = await fetch(API+"/auth/login",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ email, password, role:"patient" })
+    });
+    const data = await res.json().catch(()=>({ error:"Invalid response" }));
+    if(!res.ok) return showMsg("authMsg", data.error || `Login failed (${res.status})`, "danger");
+    token = data.token; localStorage.setItem("p_token", token);
+    showMsg("authMsg","Logged in","success");
+    showMyId(data.user.id);
+  }catch(err){ console.error(err); showMsg("authMsg","Network error during login","danger"); }
+}
+
+// questionnaire submit
+async function doSubmitQuestionnaire(){
+  if(!token) return showMsg("authMsg","Login first","danger");
+  const answers = {
+    nausea: document.getElementById("nausea").value,
+    bleeding: document.getElementById("bleeding").value,
+    fetalKicksLast2Hrs: Number(document.getElementById("kicks").value || 0),
+    systolicBP: Number(document.getElementById("sbp").value || 0),
+    diastolicBP: Number(document.getElementById("dbp").value || 0),
+    fastingGlucose: Number(document.getElementById("glucose").value || 0),
+    swellingFeet: document.getElementById("swelling").value,
+    headache: document.getElementById("headache").value
+  };
+  try{
+    const res = await fetch(API+"/patient/questionnaire",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Authorization":"Bearer "+token },
+      body: JSON.stringify({ answers })
+    });
+    const data = await res.json().catch(()=>({ error:"Invalid response" }));
+    if(!res.ok) return document.getElementById("result").textContent = data.error || `Submit failed (${res.status})`;
+    document.getElementById("result").textContent =
+      `Provisional risk: ${data.result.riskLabel} (score ${data.result.riskScore.toFixed(2)})`;
+  }catch(err){ console.error(err); document.getElementById("result").textContent = "Network error"; }
+}
+
+// attach handlers once DOM is ready (avoids “is not defined” with inline onclick)
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.getElementById("btnRegister").addEventListener("click", doRegister);
+  document.getElementById("btnLogin").addEventListener("click", doLogin);
+  document.getElementById("btnSubmitQ").addEventListener("click", doSubmitQuestionnaire);
+  // if a saved token exists, show a hint
+  if(token){ showMsg("authMsg","Session active","success"); }
+});
+</script>
+</body>
+</html>

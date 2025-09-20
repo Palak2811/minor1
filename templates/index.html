@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maternal Health Risk Predictor</title>
+<script src="https://www.google.com/search?q=https://cdn.tailwindcss.com"></script>
+<style>
+body {
+font-family: 'Inter', sans-serif;
+background-color: #f0f4f8;
+display: flex;
+justify-content: center;
+align-items: center;
+min-height: 100vh;
+}
+.card {
+background-color: #ffffff;
+border-radius: 1rem;
+box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+padding: 2.5rem;
+max-width: 28rem;
+width: 90%;
+text-align: center;
+}
+.input-group {
+display: flex;
+flex-direction: column;
+align-items: flex-start;
+margin-bottom: 1rem;
+}
+.input-group label {
+font-weight: 600;
+color: #4b5563;
+margin-bottom: 0.5rem;
+}
+.input-group input {
+width: 100%;
+padding: 0.75rem;
+border-radius: 0.5rem;
+border: 1px solid #e5e7eb;
+transition: all 0.2s ease-in-out;
+}
+.input-group input:focus {
+outline: none;
+border-color: #3b82f6;
+box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+.prediction-box {
+display: flex;
+justify-content: center;
+align-items: center;
+background-color: #d1fae5;
+color: #065f46;
+padding: 1rem;
+border-radius: 0.5rem;
+font-weight: 600;
+transition: all 0.3s ease-in-out;
+}
+</style>
+</head>
+<body>
+<div class="card">
+<h1 class="text-3xl font-bold text-gray-800 mb-2">Maternal Health Risk Predictor</h1>
+<p class="text-gray-600 mb-6">Enter the patient's data to predict the risk level using your model.</p>
+
+    <form action="/predict" method="post" class="space-y-4">
+        <div class="input-group">
+            <label for="age">Age (years)</label>
+            <input type="number" id="age" name="age" placeholder="e.g., 25" required class="transition-colors focus:border-blue-500">
+        </div>
+        <div class="input-group">
+            <label for="systolicBP">Systolic BP (mmHg)</label>
+            <input type="number" id="systolicBP" name="systolicBP" placeholder="e.g., 120" required class="transition-colors focus:border-blue-500">
+        </div>
+        <div class="input-group">
+            <label for="diastolicBP">Diastolic BP (mmHg)</label>
+            <input type="number" id="diastolicBP" name="diastolicBP" placeholder="e.g., 80" required class="transition-colors focus:border-blue-500">
+        </div>
+        <div class="input-group">
+            <label for="bs">Blood Sugar (mmol/L)</label>
+            <input type="number" step="0.1" id="bs" name="bs" placeholder="e.g., 7.5" required class="transition-colors focus:border-blue-500">
+        </div>
+        <div class="input-group">
+            <label for="bodyTemp">Body Temperature (°F)</label>
+            <input type="number" step="0.1" id="bodyTemp" name="bodyTemp" placeholder="e.g., 98.6" required class="transition-colors focus:border-blue-500">
+        </div>
+        <div class="input-group">
+            <label for="heartRate">Heart Rate (bpm)</label>
+            <input type="number" id="heartRate" name="heartRate" placeholder="e.g., 75" required class="transition-colors focus:border-blue-500">
+        </div>
+
+        <button type="submit" class="mt-8 w-full bg-blue-600 text-white font-semibold py-3 rounded-lg hover:bg-blue-700 transition-colors">Predict Risk</button>
+    </form>
+
+    {% if prediction_text %}
+    <div class="mt-6 prediction-box">
+        <p>{{ prediction_text }}</p>
+    </div>
+    {% endif %}
+</div>
+
+</body>
+</html>

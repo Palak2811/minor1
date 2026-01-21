@@ -1,29 +1,50 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/><title>Emergency Access</title>
+  <meta charset="utf-8"/>
+  <title>Emergency Access</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="./styles.css"/>
+  <style>
+    :root {
+      --primary: #6a11cb;
+      --primary2: #2575fc;
+      --text: #f3f0ff;
+      --muted: #bdb4e6;
+      --bg: #18122B;
+      --card: #23203b;
+    }
+    .hospital-item { padding: 16px; margin-bottom: 12px; background: #f8f9fa; border-left: 4px solid #6a11cb; border-radius: 6px; }
+    .hospital-item strong { display:block; color:#000; margin-bottom:6px; }
+    .hospital-info { color:#555; font-size:0.95rem; }
+    .muted { color: var(--muted); }
+    .card { padding: 20px; }
+  </style>
 </head>
 <body>
 <div class="container">
   <div class="header"><div class="brand"><div class="logo"></div><h1>Emergency Access</h1></div><a href="./minor_project.html">← Back</a></div>
 
   <div class="card">
-    <h2>Nearby hospitals</h2>
-    <p class="muted">Static list placeholder; integrate maps later.</p>
-    <ul class="list" id="hlist"></ul>
+    <h2>Nearby Hospitals (Sector 128, Noida)</h2>
+
+    <ul class="list" id="hlist">
+      <li class="hospital-item">
+        <strong>Yatharth Super Speciality Hospital</strong>
+        <div class="hospital-info">Sector 128, Noida<br/>☎️ N/A</div>
+      </li>
+      <li class="hospital-item">
+        <strong>Jaypee Hospital - Sector 128 Clinic</strong>
+        <div class="hospital-info">Sector 128, Noida<br/>☎️ N/A</div>
+      </li>
+      <li class="hospital-item">
+        <strong>Sector 128 Maternity Center</strong>
+        <div class="hospital-info">Sector 128, Noida<br/>☎️ N/A</div>
+      </li>
+    </ul>
   </div>
 
   <footer>© 2025 Maternal Health Platform</footer>
 </div>
-<script>
-const hospitals=[
-  { name:"City Women & Children Hospital", phone:"+91-22-4000-1111", address:"Sector 21A" },
-  { name:"Sunrise Maternity Center", phone:"+91-22-4000-2222", address:"Near Central Park" },
-  { name:"Greenleaf Multispeciality", phone:"+91-22-4000-3333", address:"Block C-4" }
-];
-document.getElementById("hlist").innerHTML=hospitals.map(h=>`<li><strong>${h.name}</strong> — ${h.phone} — ${h.address}</li>`).join("");
-</script>
 </body>
 </html>

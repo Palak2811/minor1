@@ -1,58 +1,71 @@
-import { Router } from "express";
-import PatientProfile from "../models/PatientProfile.js";
-import QuestionnaireResponse from "../models/QuestionnaireResponse.js";
-import { requireAuth } from "../middleware/auth.js";
+import express from 'express';
+import QuestionnaireResponse from '../models/QuestionnaireResponse.js';
+import requireAuth from '../middleware/auth.js';
 
-const router = Router();
+const router = express.Router();
 
-// Simple provisional scoring before ML
-const scoreProvisional = (a) => {
-  let s = 0;
-  if (a.bleeding === "heavy") s += 0.7;
-  else if (a.bleeding === "spotting") s += 0.3;
-  if ((a.systolicBP >= 140) || (a.diastolicBP >= 90)) s += 0.3;
-  if (a.fastingGlucose >= 126) s += 0.2;
-  if (a.fetalKicksLast2Hrs < 10) s += 0.3;
-  if (a.headache === "severe") s += 0.2;
-  if (a.swellingFeet === "yes") s += 0.1;
-  s = Math.min(1, s);
-  const label = s < 0.3 ? "Low" : s < 0.6 ? "Moderate" : "High";
-  return { s, label };
-};
+router.use(requireAuth('patient'));
 
-// Get own profile
-router.get("/me", requireAuth("patient"), async (req, res) => {
-  const profile = await PatientProfile.findOne({ user: req.user.id }).populate("assignedDoctor", "name email");
-  res.json({ profile });
+router.post('/questionnaire', async (req, res) => {
+    const { answers } = req.body;
+    try {
+        // Here you would call your ML service and get a result
+        const mlPrediction = { riskLabel: 'Low', riskScore: 0.15 }; // Dummy data
+
+        const newResponse = new QuestionnaireResponse({
+            patient: req.user.id,
+            answers: answers,
+            riskLabel: mlPrediction.riskLabel,
+            riskScore: mlPrediction.riskScore
+        });
+        await newResponse.save();
+        res.status(201).json({ message: "Questionnaire submitted", result: newResponse });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error submitting questionnaire.' });
+    }
 });
 
-// Update profile
-router.put("/me", requireAuth("patient"), async (req, res) => {
-  const profile = await PatientProfile.findOneAndUpdate(
-    { user: req.user.id },
-    { $set: req.body },
-    { new: true }
-  );
-  res.json({ profile });
+// Maternal Health Assessment endpoint
+router.post('/maternal-assessment', async (req, res) => {
+    const { answers } = req.body;
+    try {
+        // Call your Python ML service
+        const mlResult = await callMLService('maternal', answers);
+        
+        // Save to database
+        const newResponse = new QuestionnaireResponse({
+            patient: req.user.id,
+            answers: answers,
+            riskLabel: mlResult.riskLabel,
+            riskScore: mlResult.riskLevel,
+            assessmentType: 'maternal'
+        });
+        await newResponse.save();
+
+        res.status(201).json({ 
+            message: "Maternal health assessment completed", 
+            result: mlResult 
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Failed to process maternal assessment.' });
+    }
 });
 
-// Submit questionnaire
-router.post("/questionnaire", requireAuth("patient"), async (req, res) => {
-  const answers = req.body?.answers || {};
-  const { s, label } = scoreProvisional(answers);
-  const doc = await QuestionnaireResponse.create({
-    patient: req.user.id,
-    answers,
-    provisionalRiskScore: s,
-    provisionalRiskLabel: label
-  });
-  res.json({ result: { riskScore: s, riskLabel: label }, id: doc._id });
-});
+async function callMLService(modelType, answers) {
+    try {
+        const mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:5001';
+        const response = await fetch(`${mlServiceUrl}/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: modelType, data: answers })
+        });
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('ML Service Error:', error);
+        throw new Error('ML service unavailable');
+    }
+}
 
-// List my submissions
-router.get("/questionnaire", requireAuth("patient"), async (req, res) => {
-  const list = await QuestionnaireResponse.find({ patient: req.user.id }).sort({ createdAt: -1 });
-  res.json({ submissions: list });
-});
-
-export default router;
+export default router; // Use export default
